@@ -52,8 +52,9 @@ or <b>=</b>) at the beginning of each of your search values to specify how the c
     </div>
 </fieldset>
 
-<?php echo 'Hook test 001!'; ?>
-<?php echo 'Hook test 002!'; ?>
+<?php echo 'Hook test 001!'; ?><br/>
+<?php echo 'Hook test 002!'; ?><br/>
+<?php echo 'Hook test 003!'; ?><br/>
 
 
 <?php $this->widget('zii.widgets.grid.CGridView', array(
