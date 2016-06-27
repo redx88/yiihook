@@ -108,56 +108,6 @@ Yii::import('zii.widgets.grid.CGridView');
 		
 		public function renderHeader()
 		{
-			/*
-			$i=0;
-			foreach($this->columns as $n=>$column)
-			{
-				++$i;
-				if($column->name!==null && $column->header===null)
-				{
-					if($column->grid->dataProvider instanceof CActiveDataProvider)
-						$head = $column->grid->dataProvider->model->getAttributeLabel($column->name);
-					else
-						$head = $column->name;
-				} else
-					$head =trim($column->header)!=='' ? $column->header : $column->grid->blankDisplay;
-
-				self::$activeSheet->setCellValue($this->columnName($i)."1" ,$head);
-			}*/			
-		}
-		public function renderFooter()//footer created by francis
-		{
-			/*
-			$i=0;
-			$data=$this->dataProvider->getData();
-			$row=count($data);
-			foreach($this->columns as $n=>$column)
-			{
-				$i=$i+1;
-			  
-					$footer =trim($column->footer)!=='' ? $column->footer : "";
-
-				self::$activeSheet->setCellValue($this->columnName($i).($row+2),$footer);
-			}*/		
-		}
-		
-		// Main consuming function, apply every optimization you could think of
-		public function renderBody()
-		{
-			if($this->disablePaging) //if needed disable paging to export all data
-				$this->enablePagination = false;
-
-			self::$data = $this->dataProvider->getData();
-			$n=count(self::$data);
-
-			if($n>0)
-				for($row=0; $row < $n; ++$row)
-					$this->renderRow($row);
-		}
-		
-
-		public function renderRow($row)
-		{
 			self::$activeSheet->getDefaultStyle()->getFont()->setName('Arial');
 			self::$activeSheet->getDefaultStyle()->getFont()->setSize(10); 
 			
@@ -351,7 +301,56 @@ Yii::import('zii.widgets.grid.CGridView');
 			self::$activeSheet->SetCellValue('I15', 'NO. OF SAMPLES/UNITS');
 			self::$activeSheet->SetCellValue('J15', 'UNIT COST');
 			self::$activeSheet->SetCellValue('K15', 'TOTAL');
-			
+			/*
+			$i=0;
+			foreach($this->columns as $n=>$column)
+			{
+				++$i;
+				if($column->name!==null && $column->header===null)
+				{
+					if($column->grid->dataProvider instanceof CActiveDataProvider)
+						$head = $column->grid->dataProvider->model->getAttributeLabel($column->name);
+					else
+						$head = $column->name;
+				} else
+					$head =trim($column->header)!=='' ? $column->header : $column->grid->blankDisplay;
+
+				self::$activeSheet->setCellValue($this->columnName($i)."1" ,$head);
+			}*/			
+		}
+		public function renderFooter()//footer created by francis
+		{
+			/*
+			$i=0;
+			$data=$this->dataProvider->getData();
+			$row=count($data);
+			foreach($this->columns as $n=>$column)
+			{
+				$i=$i+1;
+			  
+					$footer =trim($column->footer)!=='' ? $column->footer : "";
+
+				self::$activeSheet->setCellValue($this->columnName($i).($row+2),$footer);
+			}*/		
+		}
+		
+		// Main consuming function, apply every optimization you could think of
+		public function renderBody()
+		{
+			if($this->disablePaging) //if needed disable paging to export all data
+				$this->enablePagination = false;
+
+			self::$data = $this->dataProvider->getData();
+			$n=count(self::$data);
+
+			if($n>0)
+				for($row=0; $row < $n; ++$row)
+					$this->renderRow($row);
+		}
+		
+
+		public function renderRow($row)
+		{
 			$row = 16;
 			$descRow = 39;
 			$sampleCount = 0;
@@ -359,6 +358,7 @@ Yii::import('zii.widgets.grid.CGridView');
 			//foreach($_SESSION['sample'] as $samp){
 			foreach($this->samples as $samp){
 				
+				if(!$samp->cancelled){
 				//Samples
 				self::$activeSheet->mergeCells('A'.$row.':B'.$row);
 				self::$activeSheet->SetCellValue('A'.$row, $samp->sampleName);
@@ -369,11 +369,6 @@ Yii::import('zii.widgets.grid.CGridView');
 				self::$activeSheet->getStyle('A'.$descRow.':K'.$descRow)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_LEFT);
 				self::$activeSheet->SetCellValue('A'.$descRow, $samp->sampleCode.': '.$samp->description);
 				
-					//Analyses
-					//$analyses = Analysis::model()->findAll('requestId=:requestId AND sampleCode=:sampleCode', 
-					//  array(':requestId'=>$req->requestId, ':sampleCode'=>$samp->sampleCode));
-					//foreach($_SESSION['sample'][$sampleCount]['analysis'] as $analyses){
-					
 					foreach($samp->analysesForGeneration as $analysis){
 						
 						//self::$activeSheet->mergeCells('D'.$row.':F'.$row);
@@ -388,11 +383,11 @@ Yii::import('zii.widgets.grid.CGridView');
 						self::$activeSheet->SetCellValue('J'.$row, $analysis['fee']);
 						
 						self::$activeSheet->getStyle('K'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
-						self::$activeSheet->SetCellValue('K'.$row,
-                                   '=I'.$row.'*J'.$row);
+						self::$activeSheet->SetCellValue('K'.$row,'=I'.$row.'*J'.$row);
 						
 						$row = $row + 1;
 					}
+				}	
 				$sampleCount = $sampleCount + 1;
 				$descRow = $descRow + 1;
 			}
@@ -465,8 +460,7 @@ Yii::import('zii.widgets.grid.CGridView');
 			self::$activeSheet->SetCellValue('K65', $this->formNum);
 			self::$activeSheet->getStyle('J66')->getFont()->setSize(8);
 			self::$activeSheet->SetCellValue('J66', $this->formRevNum. " | ". $this->formRevDate);
-			
-			
+						
 		}
 
 		public function dataProcess($name,$row)

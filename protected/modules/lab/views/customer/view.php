@@ -19,11 +19,11 @@ $this->menu=array(
 <h1>View Customer <small><?php echo $model->customerName; ?></small></h1>
 
 <h4><i>Agency/Personal Info</i></h4>
-<?php 
+<?php
 	$this->widget('bootstrap.widgets.TbDetailView', array(
 	'data'=>$model,
 	'attributes'=>array(
-		'customerName', 
+		'customerName',
 		'head',
 		'completeAddress',
 		array(
@@ -34,7 +34,7 @@ $this->menu=array(
 		array(
 			'name'=>'natureId',
 			'type'=>'raw',
-			'value'=>BusinessNature::model()->findByPk($model->natureId)->nature
+			'value'=>Businessnature::model()->findByPk($model->natureId)->nature
 			),
 		array(
 			'name'=>'industryId',

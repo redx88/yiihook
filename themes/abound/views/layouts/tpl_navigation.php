@@ -82,7 +82,7 @@
     	<div class="container">
         <div class="style-switcher pull-left">
        	 <?php //echo Yii::app()->Controller->module->name;?>
-         <b><?php echo Yii::app()->Controller->appTitle(Yii::app()->Controller->module->name);?></b>
+         <b><?php echo (Yii::app()->Controller->module->name == 'rights') ? 'Rights Management Module' : Yii::app()->Controller->appTitle(Yii::app()->Controller->module->name);?></b>
         </div>
         	
         	<!--div class="style-switcher pull-left">

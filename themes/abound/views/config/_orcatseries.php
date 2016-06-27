@@ -5,7 +5,7 @@
 	
 ?>
 
-<?php $this->widget('ext.groupgridview.groupGridView', array(
+<?php $this->widget('ext.groupgridview.GroupGridView', array(
         'id'=>'orseries-grid',
         'summaryText'=>false,
 		'emptyText'=>'No active series available',

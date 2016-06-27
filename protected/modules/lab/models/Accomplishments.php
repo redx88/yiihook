@@ -6,6 +6,7 @@ class Accomplishments extends CFormModel
 
     public $labId;
     public $year;  
+    public $minDate;
 
     public function rules() {
 		return array(

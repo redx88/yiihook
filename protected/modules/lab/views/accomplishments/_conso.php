@@ -15,8 +15,8 @@
     <th class="gross" width="71" rowspan="3"><div align="center">GROSS</div>      <div align="center"></div>      <div align="center"></div></th>
   </tr>
   <tr>
-    <th class="gratic" colspan="2"><div align="center">GRATIS</div></th>
-    <th class="discount" width="43" rowspan="2"><div align="center">25%</div>      <div align="center"></div></th>
+    <th class="gratic" colspan="2"><div align="center">GRATISsss</div></th>
+    <th class="discount" width="43" rowspan="2"><div align="center">DISCOUNT</div>      <div align="center"></div></th>
   </tr>
   <tr>
     <th><div align="center"><?php echo $_SESSION['year'];?></div></th>

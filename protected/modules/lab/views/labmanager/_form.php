@@ -2,7 +2,6 @@
 /* @var $this LabmanagerController */
 /* @var $model Labmanager */
 /* @var $form CActiveForm */
-echo $id;
 ?>
 
 <div class="form">
@@ -19,7 +18,7 @@ echo $id;
 	<p class="note">Fields with <span class="required">*</span> are required.</p>
 
 	<?php echo $form->errorSummary($model); ?>
-	<?php echo $form->hiddenField($model,'id'); ?>
+	<?php echo $form->textField($model,'id'); ?>
 	<div class="row">
 		<?php echo $form->labelEx($model,'lab_id'); ?>
 		<?php //echo $form->textField($model,'lab_id'); ?>

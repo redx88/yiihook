@@ -54,6 +54,7 @@ $this->menu=array(
         ),	
 		'requestRefNum', 'customer.customerName',
 		'requestDate', 'customer.completeAddress',
+		'requestTime', 'purpose.name',
 		'requestTime', 'customer.tel',
 		'reportDue', 'customer.fax',
 		array(
@@ -66,17 +67,28 @@ $this->menu=array(
 		array(
 			'name'=>'orId',
 			'type'=>'raw',
-			'value'=>Request::getORs($model->receipts)),
-		'collection',
+			//'value'=>Request::getORs($model->receipts)
+			'value'=>($model->paymentType == 1) ? Request::getORs($model->receipts) : '-'
+			),
+		//'collection',
+		array(
+			'name'=>'collection',
+			'type'=>'raw',
+			//'value'=>$model->collection
+			'value'=>($model->paymentType == 1) ? Yii::app()->format->formatNumber($model->collection) : Yii::app()->format->formatNumber($model->total). ' (Fully Subsidized)'
+			),
 		array(
 			'name'=>'orDate',
 			'type'=>'raw',
-			'value'=>Request::getORDates($model->receipts)),
-			//'value'=>$model->analysisTotal),
+			'value'=>($model->paymentType == 1) ? Request::getORDates($model->receipts) : '-'
+			//'value'=>Request::getORDates($model->receipts)
+			),
 		array(
 			'name'=>'balance',
 			'type'=>'raw',
-			'value'=>Request::getBalance($model->total, $model->collection)),
+			//'value'=>($model->paymentType == 1) ? Yii::app()->format->formatNumber($model->balance) : '0.00'
+			'value'=>Request::getBalance($model->total, $model->collection, $model->paymentType)
+			),
 		array(
             'name'=>'transactionDetails',
             'oneRow'=>true,
@@ -119,7 +131,8 @@ $this->menu=array(
 		'htmlOptions'=>array('class'=>'grid-view padding0 paddingLeftRight10'),
         'rowCssClassExpression'=>'$data->status',
 		'itemsCssClass'=>'table table-hover table-striped table-bordered table-condensed',
-		'rowHtmlOptionsExpression' => 'array("title" => "Click to update", "class"=>"link-hand")', 
+		//'rowHtmlOptionsExpression' => 'array("title" => "Click to update", "class"=>"link-hand")', 
+		'rowHtmlOptionsExpression' => 'array("title"=>"Click on Request Reference Number to view details", "class"=>$data->status["class"])',
         //It is important to note, that if the Table/Model Primary Key is not "id" you have to
         //define the CArrayDataProvider's "keyField" with the Primary Key label of that Table/Model.
         'dataProvider' => $sampleDataProvider,
@@ -157,11 +170,11 @@ $this->menu=array(
 								'label'=>'Cancel',
 								'url'=>'Yii::app()->createUrl("lab/sample/cancel/id/$data->id")',
 								'options' => array(
-									'confirm'=>'Are you want to cancel Sample?',
+									'confirm'=>'Are you want to cancel this Sample and all Tests?',
 									'ajax' => array(
 										'type' => 'get', 
 										'url'=>'js:$(this).attr("href")', 
-										'success' => 'js:function(data) { $.fn.yiiGridView.update("sample-grid")}')
+										'success' => 'js:function(data) { $.fn.yiiGridView.update("sample-grid"); $.fn.yiiGridView.update("analysis-grid")}')
 									),
 								),
 						),
@@ -185,9 +198,17 @@ $this->menu=array(
 			'class'=>'btn btn-info btn-small',
 			'disabled'=>$model->cancelled
 			));	
+	$linkAddFees = Chtml::link('<span class="icon-white icon-plus-sign"></span> Additional Fees', '', array( 
+			'style'=>'cursor:pointer;',
+			'onClick'=>$model->cancelled ? 'return false' : 'js:{addFees(); $("#dialogFees").dialog("open");}',
+			'class'=>'btn btn-info btn-small',
+			'disabled'=>$model->cancelled
+			));	
 	echo ($generated >= 1) ? $linkAnalysis : (Yii::app()->getModule('lab')->isLabAdmin() ? $linkAnalysis : '');
 	echo " ";
 	echo ($generated >= 1) ? $linkPackage : (Yii::app()->getModule('lab')->isLabAdmin() ? $linkPackage : '');
+	echo " ";
+	echo ($generated >= 1) ? $linkAddFees : (Yii::app()->getModule('lab')->isLabAdmin() ? $linkAddFees : '');
 ?>
 </small></h4>
 <?php
@@ -197,7 +218,8 @@ $this->menu=array(
 		'emptyText'=>'No analyses.',
 		'htmlOptions'=>array('class'=>'grid-view padding0 paddingLeftRight10'),
 		'itemsCssClass'=>'table table-hover table-striped table-bordered table-condensed',
-		'rowHtmlOptionsExpression' => 'array("title" => "Click to update", "class"=>"link-hand")', 
+		//'rowHtmlOptionsExpression' => 'array("title" => "Click to update", "class"=>"link-hand")', 
+		//'rowHtmlOptionsExpression' => 'array("title"=>"Click on Request Reference Number to view details", "class"=>$data->status["class"])',
         //It is important to note, that if the Table/Model Primary Key is not "id" you have to
         //define the CArrayDataProvider's "keyField" with the Primary Key label of that Table/Model.
         'dataProvider' => $analysisDataProvider,
@@ -232,12 +254,11 @@ $this->menu=array(
 			),
     		//'quantity',
     		array(
-				'name'=>'QUANTITY',
+				'name'=>'QTY',
 				'value'=>'($data->package == 1) ? "-" : $data->quantity',
 				'type'=>'raw',
     			'htmlOptions' => array('style' => 'width: 50px; text-align: center;'),
-    			'footer'=>'SUBTOTAL<br/>DISCOUNT<br/><b>TOTAL</b>',
-    			'footerHtmlOptions'=>array('style'=>'text-align: right; padding-right: 10px;'),
+    			
 			),
     		//'fee'
     		array(
@@ -246,7 +267,15 @@ $this->menu=array(
 				'value'=>'($data->package == 1) ? "-" : Yii::app()->format->formatNumber($data->fee)',
 				'type'=>'raw',
     			'htmlOptions' => array('style' => 'width: 65px; text-align: right; padding-right: 10px;'),
-    			'footer'=>
+    			'footer'=>'SUBTOTAL<br/>DISCOUNT<br/><b>TOTAL</b>',
+    			'footerHtmlOptions'=>array('style'=>'text-align: right; padding-right: 10px;'),
+			),
+			array(
+				'name'=>'TOTAL',
+				'value'=>'Yii::app()->format->formatNumber($data->rowTotal)',
+				'type'=>'raw',
+				'htmlOptions' => array('style' => 'width: 65px; text-align: right; padding-right: 10px;'),
+				'footer'=>
     					Yii::app()->format->formatNumber($model->getTestTotal($analysisDataProvider->getKeys())).
     					'<br/>'.
     					Yii::app()->format->formatNumber($model->getDiscount($analysisDataProvider->getKeys(), $model->discount)).
@@ -258,7 +287,6 @@ $this->menu=array(
     			'footerHtmlOptions'=>array('style'=>'text-align: right; padding-right: 10px;'),
 			),
 			array(
-			//'class'=>'CButtonColumn',
 			'header'=>'Actions',
 			'class'=>'bootstrap.widgets.TbButtonColumn',
 						'deleteConfirmation'=>"js:'Do you really want to delete analysis: '+$.trim($(this).parent().parent().children(':nth-child(3)').text())+'?'",
@@ -266,15 +294,13 @@ $this->menu=array(
 						'buttons'=>array
 						(
 							'delete' => array(
-								'label'=>'Delete Sample',
+								'label'=>'Delete Analysis',
 								'url'=>'Yii::app()->createUrl("lab/analysis/delete/id/$data->id")',
-								'visible'=>'$data->package == 0'
+								'visible'=>'($data->package == 0) || ($data->package == 3)'
 								),
 							'deletePackage' => array(
 								'label'=>'Delete Package',
 								'url'=>'Yii::app()->createUrl("lab/analysis/deletePackage/id/$data->id")',
-								//'options'=>array('class'=>'Add 1 more'),
-								'imageUrl'=>'',   
                 				'imageUrl'=>Yii::app()->request->baseUrl.'/images/customer_add.png', 
 								'visible'=>'$data->package == 1'
 								),
@@ -292,6 +318,7 @@ $this->menu=array(
     ));
     ?>
 <?php $this->endWidget(); //End Portlet ?>    
+
 <div class="generated">
 <?php /*echo $generated ? 'Print' : CHtml::ajaxLink(
 		Yii::t('default','Generate Sample Code'),
@@ -302,16 +329,34 @@ $this->menu=array(
 			}') 
 		);*/
 $image = CHtml::Image(Yii::app()->theme->baseUrl . '/img/page_white_excel.png', 'Print');
-
 switch ($generated) {
 	case 0:
-		echo CHtml::link('<span class="icon-white icon-print"></span> Print Request', $this->createUrl('request/genRequestExcel',array('id'=>$model->id)), array('class'=>'btn btn-success'));
+		$this->widget('bootstrap.widgets.TbButtonGroup', array(
+	        'type'=>'success', // '', 'primary', 'info', 'success', 'warning', 'danger' or 'inverse'
+	        'buttons'=>array(
+	            array('label'=>'Print Request', 'url'=>$this->createUrl('request/print',array('id'=>$model->id)), 'htmlOptions'=>array('target'=>(Yii::app()->params['FormRequest']['printFormat'] == 1) ? '' : '_blank')),
+	            array('items'=>array(
+	                array(	'label'=>'Excel', 'url'=>'#', 'active'=>Yii::app()->params['FormRequest']['printFormat'] == 1 ? true : false, 'linkOptions'=>array('onclick'=>'setPrintFormat("FormRequest", 1)')),
+	                array(	'label'=>'PDF', 'url'=>'#', 'active'=>Yii::app()->params['FormRequest']['printFormat'] == 2 ? true : false, 'linkOptions'=>array('onclick'=>'setPrintFormat("FormRequest", 2)')),
+	            )),
+	        ),
+	    ));
+		//echo CHtml::link('<span class="icon-white icon-print"></span> Print Request', $this->createUrl('request/genRequestExcel',array('id'=>$model->id)), array('class'=>'btn btn-success'));
 		/*echo '&nbsp;';
 		echo CHtml::link('<span class="icon-white icon-print"></span> Print Sample Tags', $this->createUrl('request/genSampleTags',array('id'=>$model->id)), array('class'=>'btn btn-warning', 'disabled'=>'disabled'));*/
         break;
     case ($generated < 1):
-		//$image = CHtml::Image(Yii::app()->theme->baseUrl . '/img/page_white_excel.png', 'Print');
-		echo CHtml::link('<span class="icon-white icon-print"></span> Print Request', $this->createUrl('request/genRequestExcel',array('id'=>$model->id)), array('class'=>'btn btn-success'));
+		$this->widget('bootstrap.widgets.TbButtonGroup', array(
+	        'type'=>'success', // '', 'primary', 'info', 'success', 'warning', 'danger' or 'inverse'
+	        'buttons'=>array(
+	            array('label'=>'Print Request', 'url'=>$this->createUrl('request/print',array('id'=>$model->id)), 'htmlOptions'=>array('target'=>(Yii::app()->params['FormRequest']['printFormat'] == 1) ? '' : '_blank')),
+	            array('items'=>array(
+	                array(	'label'=>'Excel', 'url'=>'#', 'active'=>Yii::app()->params['FormRequest']['printFormat'] == 1 ? true : false, 'linkOptions'=>array('onclick'=>'setPrintFormat("FormRequest", 1)')),
+	                array(	'label'=>'PDF', 'url'=>'#', 'active'=>Yii::app()->params['FormRequest']['printFormat'] == 2 ? true : false, 'linkOptions'=>array('onclick'=>'setPrintFormat("FormRequest", 2)')),
+	            )),
+	        ),
+	    ));
+    	//echo CHtml::link('<span class="icon-white icon-print"></span> Print Request', $this->createUrl('request/genRequestExcel',array('id'=>$model->id)), array('class'=>'btn btn-success'));
 		/*echo '&nbsp;';
 		echo CHtml::link('<span class="icon-white icon-print"></span> Print Sample Tags', $this->createUrl('request/genSampleTags',array('id'=>$model->id)), array('class'=>'btn btn-success', 'disabled'=>'disabled'));*/
     	break;
@@ -321,7 +366,7 @@ switch ($generated) {
 			'title'=>'Generate Sample Code',
 			'class'=>'btn btn-success',
 			//'onClick'=>'js:{ generateSampleCode(); $("#dialogCancel").dialog("open");}',
-			"onclick"=>$model->cancelled ? 'return false' : "if (!confirm('Do you really want to GENERATE Sample Codes with the current number of samples?')){return}else{ generateSampleCode(); $('#dialogSampleCode').dialog('open'); }",	
+			"onclick"=>$model->cancelled ? 'return false' : "if (!confirm('Do you really want to GENERATE Sample Codes with the current number of samples?')){return}else{ generateSampleCode(); $(this).prop('onclick',null); $('#dialogSampleCode').dialog('open'); }",	
 			));				
 				
         break;
@@ -329,7 +374,9 @@ switch ($generated) {
         echo '<p style="font-style: italic; font-weight: bold; color: red;">Generate Sample Codes from previous requests and refresh this page!</p>';
         break;
 }		
+
 ?>
+<br/><br/><br/>
 </div>
 
 <!-- Cancel Dialog : Start -->
@@ -412,6 +459,26 @@ switch ($generated) {
 ?>
 <!-- Package Dialog : End -->
 
+<!-- Additional Fees Dialog : Start -->
+<?php
+	$this->beginWidget('zii.widgets.jui.CJuiDialog', array(
+		    'id'=>'dialogFees',
+		    // additional javascript options for the dialog plugin
+		    'options'=>array(
+		        'title'=>'Additional Fees',
+				'show'=>'scale',
+				'hide'=>'scale',				
+				'width'=>400,
+				'modal'=>true,
+				'resizable'=>false,
+				'autoOpen'=>false,
+			    ),
+		));
+
+	$this->endWidget('zii.widgets.jui.CJuiDialog');
+?>
+<!-- Additional Fees Dialog : End -->
+
 <!-- SampleCode Dialog : Start -->
 <?php
 	$this->beginWidget('zii.widgets.jui.CJuiDialog', array(
@@ -461,7 +528,6 @@ $('#sample-grid table tbody tr').live('click',function()
     	);
 		if($(this).children(':nth-child(1)').text()=='No samples.'){
 			alert($(this).children(':nth-child(1)').text());
-	   		//alert(id);
 		}else{
 			updateSample(id);
 			$('#dialogSample').dialog('open');
@@ -478,10 +544,8 @@ $('#analysis-grid table tbody tr').live('click',function()
     	);
 		if($(this).children(':nth-child(1)').text()=='No analyses.'){
 			alert($(this).children(':nth-child(1)').text());
-	   		//alert(id);
 		}else{
-			updateAnalysis(id);
-			$('#dialogAnalysis').dialog('open');
+			getAnalysisType(id);
 		}
 });
 ");
@@ -749,9 +813,80 @@ function addPackage()
     return false; 
 }
 
-function generateSampleCode()
+function addFees()
+{
+    <?php echo CHtml::ajax(array(
+			'url'=>$this->createUrl('analysis/fees',array('id'=>$model->id)),
+			'data'=> "js:$(this).serialize()",
+            'type'=>'post',
+            'dataType'=>'json',
+            'success'=>"function(data)
+            {
+                if (data.status == 'failure')
+                {
+                    $('#dialogFees').html(data.div);
+                    // Here is the trick: on submit-> once again this function!
+                    $('#dialogFees form').submit(addFees);
+                }
+                else
+                {
+                    $.fn.yiiGridView.update('analysis-grid');
+					$('#dialogFees').html(data.div);
+                    setTimeout(\"$('#dialogFees').dialog('close') \",1000);
+                }
+            }",
+			'beforeSend'=>'function(jqXHR, settings){
+                    $("#dialogFees").html(
+						\'<div class="loader">'.$image.'<br\><br\>Generating form.<br\> Please wait...</div>\'
+					);
+             }',
+			 'error'=>"function(request, status, error){
+				 	$('#dialogFees').html(status+'('+error+')'+': '+ request.responseText );
+					}",
+			
+            ))?>;
+    return false; 
+}
+
+function updateFees(id)
 {
 	<?php 
+	echo CHtml::ajax(array(
+			'url'=>$this->createUrl('analysis/updateFees'),
+			'data'=> "js:$(this).serialize()+ '&id='+id",
+            'type'=>'post',
+            'dataType'=>'json',
+            'success'=>"function(data)
+            {
+                if (data.status == 'failure')
+                {
+                    $('#dialogFees').html(data.div);
+                    // Here is the trick: on submit-> once again this function!
+                    $('#dialogFees form').submit(updateFees);
+                }
+                else
+                {
+                    $.fn.yiiGridView.update('analysis-grid');
+					$('#dialogFees').html(data.div);
+                    setTimeout(\"$('#dialogFees').dialog('close') \",1000);
+                }
+            }",
+			'beforeSend'=>'function(jqXHR, settings){
+                    $("#dialogFees").html(
+						\'<div class="loader">'.$image.'<br\><br\>Retrieving record.<br\> Please wait...</div>\'
+					);
+            }',
+			 'error'=>"function(request, status, error){
+				 	$('#dialogFees').html(status+'('+error+')'+': '+ request.responseText+ ' {'+error.code+'}' );
+					}",
+            ))?>;
+    return false; 
+ 
+}
+
+function generateSampleCode()
+{
+	<?php
 	echo CHtml::ajax(array(
 			'url'=>$this->createUrl('sample/generateSampleCode',array('id'=>$model->id)),
 			//'data'=> "js:$(this).serialize()+ '&id='+id",
@@ -783,12 +918,12 @@ function generateSampleCode()
 				 	$('#dialogSampleCode').html(status+'('+error+')'+': '+ request.responseText+ ' {'+error.code+'}' );
 					}",
             ))?>;
-    return false; 
+    return false;
 }
 
 function confirmGenerateSampleCode()
 {
-	<?php 
+	<?php
 			echo CHtml::ajax(array(
 					'url'=>$this->createUrl('sample/confirm',array('id'=>$model->id)),
 		            'type'=>'post',
@@ -818,4 +953,54 @@ function confirmGenerateSampleCode()
 		            ))?>;
 		    return false; 
 }
+
+function setPrintFormat(form, format)
+{
+	
+	<?php
+			echo CHtml::ajax(array(
+					'url'=>$this->createUrl('/config/setPrintFormat'),
+					'data'=> "js:$(this).serialize()+ '&form='+form+ '&format='+format",
+					'type'=>'post',
+		            'dataType'=>'json',
+		            'success'=>"function(data)
+		            	{
+		            		location.reload();
+		            	}"
+		            ))?>;
+			return false;
+}
+
+function getAnalysisType(analysis_id)
+{
+	<?php
+			echo CHtml::ajax(array(
+					'url'=>$this->createUrl('analysis/getAnalysisType'),
+					'data'=> "js:$(this).serialize()+ '&analysis_id='+analysis_id",
+					'type'=>'post',
+		            'dataType'=>'json',
+		            'success'=>"function(data)
+		            	{	
+		            		//alert(data['analysisType']);
+		            		switch(data['analysisType']){
+		            			case '0': 
+									updateAnalysis(analysis_id);
+									$('#dialogAnalysis').dialog('open');
+									break;
+
+								case '2':
+									updatePackage(analysis_id);
+									$('#dialogPackage').dialog('open');
+									break;
+
+								case '3':
+									updateFees(analysis_id); 
+									$('#dialogFees').dialog('open');
+									break;
+		            		}
+		            	}"
+		            ))?>;
+			return false;
+}
+
 </script>

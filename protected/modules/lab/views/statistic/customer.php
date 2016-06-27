@@ -27,7 +27,7 @@ Yii::app()->clientScript->registerScript('customs', "
 	'method'=>'get',
 )); ?>
 <?php	
-	echo CHtml::dropDownList('year', $select,	
+	echo CHtml::dropDownList('year', '',	
 				CHtml::listData($this->getYear(), 'index', 'year'),
 				array(
 			   		'onchange'=>'js:{
@@ -68,7 +68,7 @@ Yii::app()->clientScript->registerScript('customs', "
     			'htmlOptions' => array('style' => 'width: 300px; text-align: left;'),
 			),
 			array(
-				'name'=>'customer.address',
+				'name'=>'customer.completeAddress',
 				'header'=>'ADDRESS',
 				'headerHtmlOptions' => array('rowspan' => 2),
 			),

@@ -21,7 +21,7 @@
  */
 class Analysis extends CActiveRecord
 {
-	public $countTest;
+	public $countTest, $total;
 	/**
 	 * @return string the associated database table name
 	 */
@@ -50,7 +50,7 @@ class Analysis extends CActiveRecord
 			array('references', 'length', 'max'=>100),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, requestId, sample_id, sampleCode, testName, method, references, quantity, fee, testId, analysisMonth, analysisYear, cancelled, deleted, package, countTest', 'safe', 'on'=>'search'),
+			array('id, requestId, sample_id, sampleCode, testName, method, references, quantity, fee, testId, analysisMonth, analysisYear, cancelled, deleted, package, countTest, total', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -159,12 +159,13 @@ class Analysis extends CActiveRecord
 	   if(parent::beforeSave())
 	   {
 			if($this->isNewRecord){
-				$this->sampleCode = 
+				$this->sampleCode = 0;
 				$this->cancelled = 0;
 				$this->deleted = 0;
 		        return true;	
 			}else{
-				$this->testName = Test::model()->findByPk($_POST['Analysis']['testName'])->testName;
+				if($this->package != 3)
+					$this->testName = Test::model()->findByPk($_POST['Analysis']['testName'])->testName;
 				return true;
 			}
 	   }
@@ -181,4 +182,14 @@ class Analysis extends CActiveRecord
 			));
 	}
 	
+	public function getStatus()
+	{
+		if($this->cancelled)
+			return array('id'=>0, 'label'=>'Cancelled', 'class'=>'alert alert-danger');
+	}
+
+	public function getRowTotal()
+	{
+		return $this->quantity * $this->fee;
+	}
 }

@@ -438,7 +438,7 @@ Yii::import('zii.widgets.grid.CGridView');
     		self::$activeSheet->SetCellValue('R7', 'Setup');
     		
     		self::$activeSheet->mergeCells('S6:S7');
-    		self::$activeSheet->SetCellValue('S6', '25%');
+    		self::$activeSheet->SetCellValue('S6', 'DISCOUNT');
     		
     		self::$activeSheet->mergeCells('T6:T7');
     		self::$activeSheet->SetCellValue('T6', 'Balance');

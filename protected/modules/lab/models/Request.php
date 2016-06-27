@@ -1,5 +1,4 @@
 <?php
-
 /**
  * This is the model class for table "request".
  *
@@ -28,6 +27,10 @@ class Request extends CActiveRecord
 	public $total_income;
 	public $payment_details;
 	public $customerName;
+	
+	public $import_path;
+	public $import = false;
+	public $minDate;
 	/**
 	 * @return string the associated database table name
 	 */
@@ -35,7 +38,6 @@ class Request extends CActiveRecord
 	{
 		return 'request';
 	}
-
 	/**
 	 * @return array validation rules for model attributes.
 	 */
@@ -55,7 +57,6 @@ class Request extends CActiveRecord
 			array('id, requestRefNum, requestId, requestDate, requestTime, rstl_id, labId, customerId, paymentType, discount, orId, total, reportDue, conforme, receivedBy, cancelled, from_date, to_date, customer_search, paymentStatus, customerName, create_time', 'safe', 'on'=>'search'),
 		);
 	}
-
 	/**
 	 * @return array relational rules.
 	 */
@@ -70,6 +71,7 @@ class Request extends CActiveRecord
 			'collection' => array(self::STAT, 'Collection', 'request_id', 'select'=> 'SUM(amount)', 'condition' => 'cancelled=0'),
 			'receipts' => array(self::HAS_MANY, 'Collection', 'request_id', 'condition' => 'cancelled=0'),
 		
+			'otherfees' => array(self::HAS_MANY, 'Fee', 'request_id'),
 			'samps' => array(self::HAS_MANY, 'Sample', 'request_id'),
 			'sampleCount' => array(self::STAT, 'Sample', 'request_id', 'condition' => 'cancelled=0'),
         	'anals' => array(self::HAS_MANY, 'Analysis', array('id'=>'sample_id'), 'through'=>'samps', 'order'=>'sample_id ASC, package DESC'),
@@ -79,7 +81,6 @@ class Request extends CActiveRecord
 			'cancelDetails' => array(self::HAS_ONE, 'Cancelledrequest', 'request_id'),
 		);
 	}
-
 	/**
 	 * @return array customized attribute labels (name=>label)
 	 */
@@ -110,7 +111,6 @@ class Request extends CActiveRecord
 			'sampleName' => 'SAMPLE'
 		);
 	}
-
 	/**
 	 * Retrieves a list of models based on the current search/filter conditions.
 	 *
@@ -126,11 +126,10 @@ class Request extends CActiveRecord
 	public function search()
 	{
 		// @todo Please modify the following code to remove attributes that should not be searched.
-
 		$criteria=new CDbCriteria;
 		
 		$criteria->with = array('customer');
-		$criteria->order = 't.id DESC';
+		$criteria->order = 't.requestDate DESC, t.id DESC';
 		$criteria->compare('t.id',$this->id);
 		//$criteria->compare('t.rstl_id', Yii::app()->getModule('user')->user()->profile->getAttribute('pstc'));
 		$criteria->compare('t.rstl_id', Yii::app()->Controller->getRstlId());
@@ -163,7 +162,6 @@ class Request extends CActiveRecord
 		    ),
 		));
 	}
-
 	/**
 	 * @return CDbConnection the database connection used for this class
 	 */
@@ -171,7 +169,6 @@ class Request extends CActiveRecord
 	{
 		return Yii::app()->ulimsDb;
 	}
-
 	/**
 	 * Returns the static model of the specified AR class.
 	 * Please note that you should have this exact method in all your CActiveRecord descendants!
@@ -212,10 +209,17 @@ class Request extends CActiveRecord
         return $tmp;
     }
     
-	public static function getBalance($total, $collection) 
+	public static function getBalance($total, $collection, $paymenttype=NULL) 
 	{
-        $balance = $total - $collection;
-        return $balance;
+        switch($paymenttype)
+		{
+			case 1: 
+				$balance = $total - $collection;
+				return Yii::app()->format->formatNumber($balance);
+				break;
+			case 2:
+				return '0.00';
+		}
     }
     
 	public function getBalance2(){
@@ -227,7 +231,9 @@ class Request extends CActiveRecord
         $analysis = Analysis::model()->findAllByPk($keys);
         $requestTotal=0;
         foreach($analysis as $fee)
-                $requestTotal+=$fee->fee;
+                //$requestTotal+=$fee->fee;
+        		/* added quantity for new total computation */
+        		$requestTotal+=$fee->quantity * $fee->fee;
         //$less = $this->getDiscount($requestTotal, $discount);        
         
         return $requestTotal;
@@ -258,16 +264,24 @@ class Request extends CActiveRecord
 	   if(parent::beforeSave())
 	   {
 			if($this->isNewRecord){
-				$this->rstl_id = Yii::app()->getModule('user')->user()->profile->getAttribute('pstc');
-				$this->requestRefNum = Request::generateRequestRef($_POST['Request']['labId']);
-				//$this->requestId = trim(com_create_guid(), '{}');
-				$this->requestDate = date('Y-m-d',strtotime($_POST['Request']['requestDate']));
-				$this->reportDue = date('Y-m-d',strtotime($_POST['Request']['reportDue']));
-				$this->cancelled = 0;
-		        return true;
+				if(!$this->import){
+					//$this->rstl_id = Yii::app()->getModule('user')->user()->profile->getAttribute('pstc');
+					$this->rstl_id = Yii::app()->Controller->getRstlId();
+					//$this->requestRefNum = Request::generateRequestRef($_POST['Request']['labId']);
+					$this->requestRefNum = Request::generateRequestRef($this->labId);
+					//$this->requestId = trim(com_create_guid(), '{}');
+					//$this->requestDate = date('Y-m-d',strtotime($_POST['Request']['requestDate']));
+					$this->requestDate = date('Y-m-d',strtotime($this->requestDate));
+					//$this->reportDue = date('Y-m-d',strtotime($_POST['Request']['reportDue']));
+					$this->reportDue = date('Y-m-d',strtotime($this->reportDue));
+					$this->cancelled = 0;
+				}
+				return true;
 			}else{
-				$this->requestDate = date('Y-m-d',strtotime($_POST['Request']['requestDate']));
-				$this->reportDue = date('Y-m-d',strtotime($_POST['Request']['reportDue']));
+				//$this->requestDate = date('Y-m-d',strtotime($_POST['Request']['requestDate']));
+				$this->requestDate = date('Y-m-d',strtotime($this->requestDate));
+				//$this->reportDue = date('Y-m-d',strtotime($_POST['Request']['reportDue']));
+				$this->reportDue = date('Y-m-d',strtotime($this->reportDue));
 				return true;
 			}
 	   }
@@ -277,22 +291,24 @@ class Request extends CActiveRecord
 	protected function afterSave(){
 		parent::afterSave();
 		if($this->isNewRecord){
-			$requestCode = new Requestcode;
-			 
-			$requestCode->requestRefNum = $this->requestRefNum;
-			$requestCode->rstl_id = Yii::app()->getModule('user')->user()->profile->getAttribute('pstc');
-			$requestCode->labId = $this->labId;
-			$codeArray = explode('-',$this->requestRefNum);
-			
-			/** Old Code: 012014-M-0001-R9 **/
-			//$requestCode->number = $codeArray[2];
-			
-			 /** New Code: R9-092014-CHE-0343 **/
-			$requestCode->number = $codeArray[3];
-			
-			$requestCode->year = date('Y', strtotime($this->requestDate));
-			$requestCode->cancelled = 0;
-			$requestCode->save();
+			if(!$this->import){
+				$requestCode = new Requestcode;
+				 
+				$requestCode->requestRefNum = $this->requestRefNum;
+				$requestCode->rstl_id = Yii::app()->getModule('user')->user()->profile->getAttribute('pstc');
+				$requestCode->labId = $this->labId;
+				$codeArray = explode('-',$this->requestRefNum);
+				
+				/** Old Code: 012014-M-0001-R9 **/
+				//$requestCode->number = $codeArray[2];
+				
+				 /** New Code: R9-092014-CHE-0343 **/
+				$requestCode->number = $codeArray[3];
+				
+				$requestCode->year = date('Y', strtotime($this->requestDate));
+				$requestCode->cancelled = 0;
+				$requestCode->save();
+			}
 		}else{
 			$this->updateRequestTotal($this->id);
 		}
@@ -300,13 +316,13 @@ class Request extends CActiveRecord
 	
 	function generateRequestRef($lab){
 		$date = date('mY', strtotime($this->requestDate));
+		$year = date('Y', strtotime($this->requestDate));
 		
 		$request = Request::model()->find(array(
    			'select'=>'requestRefNum, rstl_id, labId, requestDate', 
-			//'order'=>'requestRefNum DESC, requestDate DESC',
 			'order'=>'create_time DESC, id DESC',
     		'condition'=>'rstl_id = :rstl_id AND labId = :labId AND YEAR(requestDate) = :year',
-    		'params'=>array(':rstl_id' => Yii::app()->Controller->getRstlId(), ':labId' => $lab, ':year' => date('Y') )
+    		'params'=>array(':rstl_id' => Yii::app()->Controller->getRstlId(), ':labId' => $lab, ':year' => $year )
 		));
 		
 		if(isset($request)){
@@ -315,15 +331,17 @@ class Request extends CActiveRecord
 		}else{
 			$initializeCode = Initializecode::model()->find(array(
 	   			'select'=>'*',
-	    		'condition'=>'rstl_id = :rstl_id AND lab_id = :lab_id AND codeType = :codeType',
+	    		'condition'=>'rstl_id = :rstl_id AND lab_id = :lab_id AND codeType = :codeType AND active = 1',
 	    		'params'=>array(':rstl_id' => Yii::app()->Controller->getRstlId(), ':lab_id' => $lab, ':codeType' => 1 )
 			));
-			$number = Request::addZeros($initializeCode->startCode + 1);
+			if(isset($initializeCode))
+				$number = Request::addZeros($initializeCode->startCode + 1);
+			else
+				$number = Request::addZeros(1);
 		}
 		
 		$labCode = Lab::model()->findByPk($lab);
 		$rstl = Rstl::model()->findByPk(Yii::app()->Controller->getRstlId());
-		//$requestRefNo = $date.'-'.$labCode->labCode.'-'.$number.'-'.$rstl->code;
 		$requestRefNo = $rstl->code.'-'.$date.'-'.$labCode->labCode.'-'.$number;
 		
 		return $requestRefNo;
@@ -555,13 +573,17 @@ class Request extends CActiveRecord
 	public function getPaymentStatus()
 	{
 		$receipts=$this->receipts;
-		$balance=$this->getBalance($this->total, $this->collection);
-		
-		if($receipts){
-			if($balance>0)
-				return array('id'=>2, 'label'=>'Paid-Partial', 'class'=>'payment alert-warning');
-				
-			return array('id'=>1, 'label'=>'Paid-Full', 'class'=>'payment alert-success');
+		$balance=$this->getBalance($this->total, $this->collection, $this->paymentType);
+		if($this->paymentType == 2)
+		{
+			return array('id'=>1, 'label'=>'Fully Subsidized', 'class'=>'payment alert-success');
+		}else{
+			if($receipts){
+				if($balance>0)
+					return array('id'=>2, 'label'=>'Paid-Partial', 'class'=>'payment alert-warning');
+					
+				return array('id'=>1, 'label'=>'Paid-Full', 'class'=>'payment alert-success');
+			}
 		}
 		
 		return array('id'=>0, 'label'=>'Unpaid', 'class'=>'payment alert-danger');
@@ -588,7 +610,34 @@ class Request extends CActiveRecord
 				}
 	    	}
 		}
-
 		return CHtml::listData($list, 'requestRefNum', 'requestRefNum', 'labId');
+	}
+	
+	public static function displaySamplesForImport($samples)
+	{
+		$html = '<table id="samples-for-import" class="">';
+		
+		foreach($samples as $sample){
+			$html .= '<tr rowspan="'.count($samples).'"><td>'.$sample['sampleCode'].' - '.$sample['sampleName'].'<br/>'.$sample['description'].'</td>';
+			$countAnalyses = 1;
+			foreach($sample['analyses'] as $analysis)
+			{
+				if($countAnalyses > 1)
+					$html .= '<tr><td></td><td>'.$analysis['testName'].' - '.$analysis['fee'].'</td>';
+				else 
+					$html .= '<td>'.$analysis['testName'].' - '.$analysis['fee'].'</td>';
+				$html .= '</tr>';
+				$countAnalyses += 1;
+			}
+			
+			
+			if(count($samples) > 1)
+			{
+				
+			}
+		}
+		
+		$html .= '</table>';
+		return $html;
 	}
 }

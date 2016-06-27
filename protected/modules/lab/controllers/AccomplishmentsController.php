@@ -127,8 +127,9 @@ class AccomplishmentsController extends Controller
 						}
 					}
 				}
-				$valueNDiscount += $request->discount ? (($request->total / 0.75) * 0.25) : 0;
-				
+				//$valueNDiscount += $request->discount ? (($request->total / 0.75) * 0.25) : 0;
+				$valueNDiscount += $request->discount ? (($request->total / (100-$request->disc->rate) * $request->disc->rate)) : 0;
+
 				//$analysesSubTotal += $testSetup + $testNSetup;
 				//$samplesSubTotal += $sampleSetup + $sampleNSetup;
 				//$customersSubTotal += $customerSetup + $customerNSetup; 
@@ -1099,8 +1100,13 @@ class AccomplishmentsController extends Controller
 	
 	public function getYear()
 	{
+		$request = Request::model()->find(array(
+					'select' => '*',
+					'order' => 'requestDate ASC',
+				));
+		
 		$listYear = array();
-		for ($year = date('Y'); $year >= 2013; $year = $year - 1) {
+		for ($year = date('Y'); $year >= date('Y', strtotime($request->requestDate)); $year = $year - 1) {
 			$y = array("index" => $year , "year" => $year);
 			array_push($listYear, $y);
 		}

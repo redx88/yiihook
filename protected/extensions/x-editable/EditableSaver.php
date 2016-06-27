@@ -91,10 +91,69 @@ class EditableSaver extends CComponent
         }
     }
 
+    /** 
+     * $es->update() updates local model
+	 * modified x-editable/EditableSaver.php
+	 * PUT data to the API
+	 */ 
+    
+    public function updateAPI()
+    {
+    	//get params from request
+        $this->primaryKey = yii::app()->request->getParam('pk');
+        $this->attribute = yii::app()->request->getParam('name');
+        $this->value = yii::app()->request->getParam('value');
+        $this->scenario = yii::app()->request->getParam('scenario');
+        
+        $postFields = $this->attribute.'='.$this->value;
+        
+		$referralstatus = RestController::putData('referralstatuses', $postFields, $this->primaryKey);
+    }
+    
+	public function updatePaymentitem()
+    {
+    	//get params from request
+        $this->primaryKey = yii::app()->request->getParam('pk');
+        $this->attribute = yii::app()->request->getParam('name');
+        $this->value = yii::app()->request->getParam('value');
+        $this->scenario = yii::app()->request->getParam('scenario');
+        
+        $postFields = $this->attribute.'='.Yii::app()->format->unformatNumber($this->value);
+        
+		$referralstatus = RestController::putData('paymentitems', $postFields, $this->primaryKey);
+    }
+    
+	public function updateMethodreference()
+    {
+    	//get params from request
+        $this->primaryKey = yii::app()->request->getParam('pk');
+        $this->attribute = yii::app()->request->getParam('name');
+        $this->value = yii::app()->request->getParam('value');
+        $this->scenario = yii::app()->request->getParam('scenario');
+        
+        $postFields = $this->attribute.'='.Yii::app()->format->unformatNumber($this->value);
+        
+		$methodreference = RestController::putData('methodreferences', $postFields, $this->primaryKey);
+    }
+    
+	public function updateBarcode()
+    {
+    	//get params from request
+        $this->primaryKey = yii::app()->request->getParam('pk');
+        $this->attribute = yii::app()->request->getParam('name');
+        $this->value = yii::app()->request->getParam('value');
+        $this->scenario = yii::app()->request->getParam('scenario');
+        
+        $postFields = $this->attribute.'='.$this->value;
+        
+		$methodreference = RestController::putData('samples', $postFields, $this->primaryKey);
+    }
+    
     /**
      * main function called to update column in database
      *
      */
+    
     public function update()
     {
         //get params from request

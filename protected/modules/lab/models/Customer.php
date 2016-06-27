@@ -145,25 +145,22 @@ class Customer extends CActiveRecord
 		return parent::model($className);
 	}
 	
-	public function beforeSave(){
+	public function beforeSave()
+	{
 	   if(parent::beforeSave())
 	   {
 			if($this->isNewRecord){
 				$this->rstl_id = Yii::app()->getModule('user')->user()->profile->getAttribute('pstc');
-				//$this->municipalitycity_id = $_POST['municipalitycity_id'];
-				//$this->barangay_id = $_POST['barangay_id'];
 		        return true;
 			}else{
-				//$this->municipalitycity_id = $_POST['municipalitycity_id'];
-				//$this->barangay_id = $_POST['barangay_id'];
 				return true;
 			}
 	   }
 	   return false;
 	}
-	
+
 	//address, region_id, province_id, municipalitycity_id, barangay_id, completeAddress,
-	public function getCompleteAddress()
+	/*public function getCompleteAddress()
 	{
 		$completeAddress="";
 		//if ($this->mailingAddress){
@@ -189,5 +186,54 @@ class Customer extends CActiveRecord
 		//}
 		
 		return $completeAddress;		
-	}	
+	}*/
+	public function getCompleteAddress()
+	{
+		$completeAddress = "";
+		$tailAddress = "";
+		if($this->barangay_id){
+				$barangayName=Barangay::model()->findByPk($this->barangay_id)->name;
+				$tailAddress .= $barangayName. ", ";
+			}
+		if($this->municipalitycity_id){
+				$municipalityCity=MunicipalityCity::model()->findByPk($this->municipalitycity_id);
+				$municipalityCityName=$municipalityCity->name;
+				$provinceName=Province::model()->findByPk($municipalityCity->provinceId)->name;								
+				
+				if($municipalityCityName==$provinceName){
+					$tailAddress .= $municipalityCityName;
+				}else{
+					$tailAddress .= $municipalityCityName.", ".$provinceName;
+				}
+			}
+
+		if ($this->address != ""){
+
+			return $this->address.', '.$tailAddress;
+		}else{
+			if($this->address)
+				$completeAddress .= $this->address.", ";
+			
+			if($this->barangay_id){
+				$barangayName=Barangay::model()->findByPk($this->barangay_id)->name;
+				$completeAddress .= $barangayName. ", ";
+			}
+		
+			if($this->municipalitycity_id){
+				$municipalityCity=MunicipalityCity::model()->findByPk($this->municipalitycity_id);
+				$municipalityCityName=$municipalityCity->name;
+				$provinceName=Province::model()->findByPk($municipalityCity->provinceId)->name;								
+				
+				if($municipalityCityName==$provinceName){
+					$tailAddress .= $municipalityCityName;
+				}else{
+					$tailAddress .= $municipalityCityName.", ".$provinceName;
+				}
+			}						
+			$completeAddress .= $tailAddress;
+			return $completeAddress;
+		}
+		//return $this->address;
+		
+	}
 }

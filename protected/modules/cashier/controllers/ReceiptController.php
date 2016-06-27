@@ -308,7 +308,7 @@ public function actionCancel($id)
 		$maxDate = date("Y-m-d", mktime(0, 0, 0, $month, $receipt->getDays($month), $year));
 		
 		$criteria=new CDbCriteria;
-		$criteria->order = 'receiptId ASC';
+		$criteria->order = 'receiptDate ASC, receiptId ASC';
 		$criteria->select = array('*');
 		$criteria->condition = 'receiptDate >= :minDate AND receiptDate <= :maxDate AND rstl_id = :rstl_id';
 		$criteria->params = array(':minDate' => $minDate, ':maxDate' => $maxDate, ':rstl_id'=>$this->getRstlId());
@@ -487,7 +487,7 @@ public function actionCancel($id)
 		$maxDate = date("Y-m-d", mktime(0, 0, 0, $month, $receipt->getDays($month), $year));
 		
 		$criteria=new CDbCriteria;
-		$criteria->order = 'receiptId ASC';
+		$criteria->order = 'receiptDate ASC, receiptId ASC';
 		$criteria->select='*';
 		$criteria->condition = 'receiptDate >= :minDate AND receiptDate <= :maxDate';
 		$criteria->params = array(':minDate' => $minDate, ':maxDate' => $maxDate);

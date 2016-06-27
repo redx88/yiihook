@@ -199,20 +199,26 @@ class Sample extends CActiveRecord
 	   return false;
 	}
 	
-	public function getStatus() {
+	// public function getStatus() {
         
-        $statuscolor='white';
-        switch ($this->cancelled) {
-            case 0:
-                $statuscolor='green';
-                break;
-            case 1:
-                $statuscolor='redish';
-                break;
-        }
-        return $statuscolor;
+ //        $statuscolor='white';
+ //        switch ($this->cancelled) {
+ //            case 0:
+ //                $statuscolor='green';
+ //                break;
+ //            case 1:
+ //                $statuscolor='redish';
+ //                break;
+ //        }
+ //        return $statuscolor;
         
-    }
+ //    }
+
+	public function getStatus()
+	{
+		if($this->cancelled)
+			return array('id'=>0, 'label'=>'Cancelled', 'class'=>'alert alert-danger');
+	}
 	/*
 	protected function afterSave(){
 		parent::afterSave();

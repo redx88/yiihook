@@ -155,7 +155,7 @@ class AnalysisController extends Controller
 		if(isset($_POST['Analysis']))
 		{
 			$totalSamples = count($_POST['Analysis']['sample_id']);
-			$count = 0;
+			$count = 0;	
 			$done = false;
 			
 			$package = Package::model()->findByPk($_POST['package']);
@@ -243,7 +243,125 @@ class AnalysisController extends Controller
         }
 		//$this->render('create',array('model'=>$model,));
 	}
-	
+
+	public function actionFees()
+	{
+		$model=new Analysis;
+
+		// Uncomment the following line if AJAX validation is needed
+		// $this->performAjaxValidation($model);
+		
+		if(isset($_GET['id']))
+		{
+			$requestId = $_GET['id'];
+			$request = Request::model()->findByPk($requestId); 
+		}
+
+		if(isset($_POST['Analysis']))
+		{
+			$totalSamples = count($_POST['Analysis']['sample_id']);
+			$count = 0;	
+			$done = false;
+			$countTests = count($testArray);
+			
+			foreach($_POST['Analysis']['sample_id'] as $sample_id){
+				$model = New Analysis;
+				$model->requestId = $_POST['Analysis']['requestId'];
+				$model->sample_id = $sample_id;
+				$model->testName = $_POST['Analysis']['reference'];
+				$model->quantity = $_POST['Analysis']['quantity'];
+				$model->fee = $_POST['Analysis']['fee'];
+				$model->testId = 0;
+				$model->analysisMonth = $_POST['Analysis']['analysisMonth'];
+				$model->analysisYear = $_POST['Analysis']['analysisYear'];
+				$model->package = 3;
+				$model->save();
+				
+				$count++;
+				if($count == $totalSamples)
+					$done = true;
+				else 
+					$done = false;
+			}	
+				if($done){
+					if (Yii::app()->request->isAjaxRequest)
+	                {
+	                    echo CJSON::encode(array(
+	                        'status'=>'success', 
+	                        'div'=>"Fee successfully added"
+	                        ));
+	                    exit;               
+	                }
+	                else
+	                    $this->redirect(array('view','id'=>$model->id));
+				}
+		}
+
+		if (Yii::app()->request->isAjaxRequest)
+        {
+			
+			if($request->sampleCount){
+				$div=$this->renderPartial('_formfees', array('model'=>$model,'requestId'=>$requestId, 'request'=>$request) ,true , true);
+			}else{
+				$div='<div style="text-align:center;" class="alert alert-error"><i class="icon icon-warning-sign"></i><font style="font-size:14px;"> System Warning. </font><br \><br \><div>Please add at least one(1) sample for analysis.</div></div>';
+			}
+            echo CJSON::encode(array(
+                'status'=>'failure',
+                'div'=>$div));
+            exit;               
+        }else{
+            $this->render('fees',array('model'=>$model,));
+        }
+	}
+
+	public function actionUpdateFees($id=NULL)
+	{
+		if(isset($_POST['Analysis']['id'])){
+			$id=$_POST['Analysis']['id'];
+		}else{
+			if(isset($_POST['id']))
+			$id=$_POST['id'];
+		}
+		$model=$this->loadModel($id);
+		
+		$sampleId=$model->sample_id;
+
+		// Uncomment the following line if AJAX validation is needed
+		// $this->performAjaxValidation($model);
+
+		if(isset($_POST['Analysis']))
+		{
+			$model->attributes=$_POST['Analysis'];
+			$model->sample_id = $sampleId;
+			$model->testName = $_POST['Analysis']['reference'];
+			$model->quantity = $_POST['Analysis']['quantity'];
+			$model->fee = $_POST['Analysis']['fee'];
+			if($model->save()){
+				if (Yii::app()->request->isAjaxRequest)
+				{
+					echo CJSON::encode(array(
+                        'status'=>'success', 
+                        'div'=>"Fee updated"
+                        ));
+                    exit;    
+				}
+				else
+					$this->redirect(array('view','id'=>$model->id));
+			}
+		}
+
+		if (Yii::app()->request->isAjaxRequest)
+        {
+			echo CJSON::encode(array(
+                'status'=>'failure',
+                'div'=>$this->renderPartial('_formfees', array('model'=>$model) ,true , true)));
+            exit;               
+        }else{
+        		
+			$this->render('update',array('model'=>$model));
+        }
+	}
+
 	/**
 	 * Updates a particular model.
 	 * If update is successful, the browser will be redirected to the 'view' page.
@@ -479,6 +597,23 @@ class AnalysisController extends Controller
 		exit;
 	}
 
+	function actionGetFeedetails(){
+		if(isset($_POST['item']))
+			$fee_id = $_POST['item'];
+		
+		//if(isset($_POST['testNameUpdate']))
+			//$testName = $_POST['testNameUpdate'];
+			
+		$fee = Fee::model()->findByPk($fee_id);
+		$data = array(
+			'code' => $fee->code,
+			'reference' => $fee->name,
+			'unitCost' => $fee->unitCost
+		);
+		echo CJSON::encode($data); 
+		exit;
+	}
+
 	function actionGetPackagedetails(){
 		if(isset($_POST['package']))
 			$testName = $_POST['package'];
@@ -505,4 +640,11 @@ class AnalysisController extends Controller
 		echo CJSON::encode($data); 
 		exit;
 	}	
+
+	public function actionGetAnalysisType()
+	{
+		$analysis = Analysis::model()->findByPk($_POST['analysis_id']);
+		echo CJSON::encode(array('analysisType'=>$analysis->package));
+		exit;
+	}
 }

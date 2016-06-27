@@ -11,7 +11,7 @@ Yii::app()->clientScript->scriptMap['jquery.min.js'] = false;
 </span>
 <span class="<?php echo $request->paymentStatus['class']; ?>" style="float:right; min-width:80px; min-height:30px; line-height:30px;text-align:center;display:inline-block;font-weight:bold;"><?php echo $request->paymentStatus['label']; ?></span>
 	<?php
-		$this->widget('ext.groupgridview.groupGridView', array(
+		$this->widget('ext.groupgridview.GroupGridView', array(
 			'id'=>'collection-grid',
 			'summaryText'=>false,
 			'emptyText'=>'No payment record',
@@ -25,7 +25,7 @@ Yii::app()->clientScript->scriptMap['jquery.min.js'] = false;
 			'extraRowTotals' => function($data, $row, &$totals) {
           	if(!isset($totals['count'])) $totals['count'] = 0;
          	 $totals['count']++;
-          
+
           	if(!isset($totals['sum_amount'])) $totals['sum_amount'] = 0;
           		$totals['sum_amount'] += $data['amount'];
       		},

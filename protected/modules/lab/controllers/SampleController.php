@@ -186,6 +186,21 @@ class SampleController extends Controller
 
 	public function actionCancel($id)
 	{
+		//$sample = Sample::model()->findByPk($id);
+		/** Changed query to get Package Name on Analysis model **/
+		$analyses = Analysis::model()->findAllByAttributes(
+		    array('sample_id'=>$id)
+		);
+		//foreach($sample->analyses as $analysis)
+		foreach($analyses as $analysis)
+		{
+			Analysis::model()->updateByPk($analysis->id, 
+				array('cancelled'=>1,
+				  'deleted'=>1,
+				  'fee'=>0,
+			));
+		}
+
 		Sample::model()->updateByPk($id, 
 			array('cancelled'=>1,
 			));
@@ -251,27 +266,12 @@ class SampleController extends Controller
 		if($modelRequest->sampleCount && $modelRequest->anals){
 			foreach($modelRequest->samps as $sample)
 			{
-				/*$count = Samplecode::model()->count(array(
-					'select'=>'*',
-					'condition'=>'rstl_id = :rstl_id AND labId = :labId AND year = :year AND cancelled = 0',
-					'params'=>array(':rstl_id' => $modelRequest->rstl_id, ':labId' => $modelRequest->labId, ':year' => date('Y') )
-				));*/
-				
-				/*$count = Samplecode::model()->find(array(
-					'select'=>'*',
-					'order'=>'id DESC',
-					'condition'=>'rstl_id = :rstl_id AND labId = :labId AND year = :year AND cancelled = 0',
-					'params'=>array(':rstl_id' => $modelRequest->rstl_id, ':labId' => $modelRequest->labId, ':year' => date('Y') )
-				))->number;*/	
-				
-				//$count = $count + 1;
-			
-				//$number = $this->addZeros($count);
-				
 				$labCode = Lab::model()->findByPk($modelRequest->labId);
-				//$code = $labCode->labCode.'-'.$number;
+				
+				$year = date('Y', strtotime($modelRequest->requestDate));
+				
 				$code=new Samplecode;
-				$sampleCode = $code->generateSampleCode($labCode);
+				$sampleCode = $code->generateSampleCode($labCode, $year);
 				$number = explode('-', $sampleCode);
 				$this->appendSampleCode($modelRequest, $number[1]);
 				
@@ -320,8 +320,8 @@ class SampleController extends Controller
 		$currentRequest = Requestcode::model()->find(array(
     		'condition'=>'rstl_id = :rstl_id AND requestRefNum = :requestRefNum',
     		'params'=>array(':rstl_id' => Yii::app()->user->rstlId, ':requestRefNum' => $modelRequest->requestRefNum)
-		));	
-		
+		));
+
 		$generatedRequest = New Generatedrequest;
 		$generatedRequest->rstl_id = $modelRequest->rstl_id;
 		$generatedRequest->request_id = $modelRequest->id;
@@ -329,9 +329,9 @@ class SampleController extends Controller
 		$generatedRequest->year = date('Y', strtotime($modelRequest->requestDate));
 		$generatedRequest->number = $currentRequest->number;
 		$generatedRequest->save();
-		
+
 	}
-		
+
 	function addZeros($count){
 		if($count < 10)
 			return '000'.$count;
@@ -340,7 +340,7 @@ class SampleController extends Controller
 		elseif ($count < 1000)
 			return '0'.$count;
 		elseif ($count >= 1000)
-			return $count;			
+			return $count;
 	}
 	
 	function actionConfirm()

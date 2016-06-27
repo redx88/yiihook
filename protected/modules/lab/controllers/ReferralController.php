@@ -180,9 +180,9 @@ class ReferralController extends Controller
 	 */
 	public function actionCreate()
 	{
-		$model=new Request;
-		$model->paymentType = 1;
-		$model->labId = 1;
+		$model=new Referral;
+		//$model->paymentType = 1;
+		//$model->labId = 1;
 		// Uncomment the following line if AJAX validation is needed
 		// $this->performAjaxValidation($model);
 
@@ -342,7 +342,7 @@ class ReferralController extends Controller
 		
 		if (!empty($_GET['term'])) {
 			$sql = 'SELECT id as id, customerName as customerName, address as address, tel as tel, fax as fax, customerName as label';
-			$sql .= ' FROM ulimsLab.customer WHERE customerName LIKE :qterm OR head LIKE :qterm AND rstl_id = '.Yii::app()->getModule('user')->user()->profile->getAttribute('pstc');
+			$sql .= ' FROM ulimslab.customer WHERE customerName LIKE :qterm OR head LIKE :qterm AND rstl_id = '.Yii::app()->getModule('user')->user()->profile->getAttribute('pstc');
 			$sql .= ' GROUP BY customerName ORDER BY customerName ASC';
 			$command = Yii::app()->db->createCommand($sql);
 			$qterm = $_GET['term'].'%';
@@ -360,7 +360,7 @@ class ReferralController extends Controller
 		if (!empty($_GET['term'])) {
 			//$sql = 'SELECT id as id, name as name, description as description, CONCAT(name,": ",description) as label';
 			$sql = 'SELECT id as id, name as name, description as description, name as label';
-			$sql .= ' FROM ulimsLab.samplename WHERE name LIKE :qterm';
+			$sql .= ' FROM ulimslab.samplename WHERE name LIKE :qterm';
 			$sql .= ' ORDER BY name ASC';
 			$command = Yii::app()->db->createCommand($sql);
 			$qterm = $_GET['term'].'%';

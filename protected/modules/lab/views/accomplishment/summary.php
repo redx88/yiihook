@@ -51,7 +51,7 @@
     <th class="gross" rowspan="2"><div align="center">Total</div>      <div align="center"></div>      <div align="center"></div></th>
     <th class="paid" colspan="2"><div align="center">PAID</div></th>
     <th class="gratis" colspan="2"><div align="center">GRATIS</div></th>
-    <th class="discount" width="43" rowspan="2"><div align="center">25%</div>      <div align="center"></div></th>
+    <th class="discount" width="43" rowspan="2"><div align="center">DISCOUNT----</div>      <div align="center"></div></th>
     <th class="balance" width="43" rowspan="2"><div align="center">Balance</div>      <div align="center"></div></th>
   </tr>
   <tr>

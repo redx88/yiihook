@@ -198,7 +198,7 @@ class DepositController extends Controller
 		$maxDate = date("Y-m-d", mktime(0, 0, 0, $month, $receipt->getDays($month), $year));
 		
 		$criteria=new CDbCriteria;
-		$criteria->order = 'receiptDate ASC';
+		$criteria->order = 'receiptDate ASC, receiptId ASC';
 		$criteria->select = array('*');
 		$criteria->with = 'deposit';
 		$criteria->condition = 'receiptDate >= :minDate AND receiptDate <= :maxDate AND t.rstl_id = :rstl_id';
@@ -370,7 +370,7 @@ class DepositController extends Controller
 		$maxDate = date("Y-m-d", mktime(0, 0, 0, $month, $receipt->getDays($month), $year));
 		
 		$criteria=new CDbCriteria;
-		$criteria->order = 'receiptDate ASC';
+		$criteria->order = 'receiptDate ASC, receiptId ASC';
 		$criteria->select = array('*');
 		$criteria->with = 'deposit';
 		$criteria->condition = 'receiptDate >= :minDate AND receiptDate <= :maxDate';

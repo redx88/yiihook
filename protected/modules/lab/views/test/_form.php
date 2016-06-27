@@ -52,17 +52,8 @@
 	<div class="row">
 		<?php echo $form->labelEx($model,'categoryId'); ?>
 		<?php //echo $form->textField($model,'categoryId'); ?>
-		<?php /*echo CHtml::dropDownList('categoryId', '' ,
-						CHtml::listData(TestCategory::model()->findAll(), 'id', 'categoryName'),
-						array('ajax'=>array( 
-										'type'=>'POST',
-								 		'url'=>$this->createUrl('test/getSampletype'),
-								 		'update'=>'#sampleType',
-								    ),
-						//'empty'=>''
-								    ));*/?>
 		<?php echo $form->dropDownList($model,'categoryId',
-								 CHtml::listData(TestCategory::model()->findAll(), 'id', 'categoryName'),
+								 CHtml::listData(Testcategory::model()->findAll(), 'id', 'categoryName'),
 								 array('ajax'=>array(
 													 'type'=>'POST',
 													 'url'=>$this->createUrl('test/sampletype'),
@@ -80,11 +71,11 @@
 		<?php 
 		echo $model->isNewRecord ? 
 			$form->dropDownList($model,'sampleType',CHtml::listData(
-								SampleType::model()->findAllByAttributes(array('testCategoryId'=>1)),
+								Sampletype::model()->findAllByAttributes(array('testCategoryId'=>1)),
 								'id', 'sampleType')) //for default create new record*/
 		:
 			$form->dropDownList($model,'sampleType',CHtml::listData(
-								SampleType::model()->findAllByAttributes(array('testCategoryId'=>$model->categoryId)),
+								Sampletype::model()->findAllByAttributes(array('testCategoryId'=>$model->categoryId)),
 								'id', 'sampleType'));
 		
 		

@@ -181,8 +181,30 @@ class ConfigController extends Controller
 			));
 	}
 	
+	public function actionSaveAPISettings()
+	{
+		$apisettings=dirname(__FILE__).'/../config/api-settings.ini';
+		$apisettings_array = parse_ini_file($apisettings, true);
+		$apisettingsarr=array();
+		
+		$apisettingsarr['API']=array(
+								'url'=>$_POST['API']['url'],
+								'version'=>$_POST['API']['version'],
+								'proxy_url'=>$_POST['API']['proxy_url'],
+								'proxy_port'=>$_POST['API']['proxy_port'],
+								'proxy_user'=>$_POST['API']['proxy_user'],
+								'proxy_pass'=>$_POST['API']['proxy_pass'],
+								'api_secret'=>$_POST['API']['api_secret']);
+		
+		if($this->write_ini_file($apisettingsarr, $apisettings, TRUE)){
+			$this->redirect('admin');
+		}
+	}
+	
 	public function actionSaveSettings()
 	{		
+		
+		
 		$settings=dirname(__FILE__).'/../config/site-settings.ini';
 		$settings_array = parse_ini_file($settings, true);
 		$settingsarr=array();
@@ -249,6 +271,39 @@ class ConfigController extends Controller
 		
 	}
 
+	public function actionSetPrintFormat()
+	{
+		$settings=dirname(__FILE__).'/../config/form-settings.ini';
+		$settings_array = parse_ini_file($settings, true);
+		$settingsarr=array();
+		
+		$form = $_POST['form'];
+		$format = $_POST['format'];
+		
+		$settingsarr['FormRequest']=array(
+								'title'=>Yii::app()->params['FormRequest']['title'], 
+								'number'=>Yii::app()->params['FormRequest']['number'], 
+								'revNum'=>Yii::app()->params['FormRequest']['revNum'],
+								'revDate'=>Yii::app()->params['FormRequest']['revDate'],
+								'printFormat'=>($form == 'FormRequest') ? $format : Yii::app()->params['FormRequest']['printFormat'],
+								'logoLeft'=>Yii::app()->params['FormRequest']['logoLeft'],
+								'logoRight'=>Yii::app()->params['FormRequest']['logoLeft']);
+
+		$settingsarr['FormOrderofpayment']=array(
+								'title'=>Yii::app()->params['FormOrderofpayment']['title'], 
+								'number'=>Yii::app()->params['FormOrderofpayment']['number'], 
+								'revNum'=>Yii::app()->params['FormOrderofpayment']['revNum'],
+								'revDate'=>Yii::app()->params['FormOrderofpayment']['revDate'],
+								'printFormat'=>($form == 'FormOrderofpayment') ? $format : Yii::app()->params['FormOrderofpayment']['printFormat'],
+								'logoLeft'=>Yii::app()->params['FormOrderofpayment']['logoLeft'],
+								'logoRight'=>Yii::app()->params['FormOrderofpayment']['logoRight']);
+		
+		if($this->write_ini_file($settingsarr, $settings, TRUE)){
+			echo CJSON::encode(array('message'=>'Setting Saved.'));
+			exit;
+		}
+	}
+	
 	public function actionSaveFormSettings()
 	{		
 		$settings=dirname(__FILE__).'/../config/form-settings.ini';
@@ -259,19 +314,21 @@ class ConfigController extends Controller
 								'title'=>$_POST['FormRequest']['title'], 
 								'number'=>$_POST['FormRequest']['number'], 
 								'revNum'=>$_POST['FormRequest']['revNum'],
+								'printFormat'=>$_POST['FormRequest']['printFormat'],
 								'revDate'=>$_POST['FormRequest']['revDate']);
 
 		$settingsarr['FormOrderofpayment']=array(
 								'title'=>$_POST['FormOrderofpayment']['title'], 
 								'number'=>$_POST['FormOrderofpayment']['number'], 
 								'revNum'=>$_POST['FormOrderofpayment']['revNum'],
+								'printFormat'=>$_POST['FormOrderofpayment']['printFormat'],
 								'revDate'=>$_POST['FormOrderofpayment']['revDate']);
-		
+
 		$formRequestLogoLeft=CUploadedFile::getInstanceByName('FormRequest[logoLeft]');
 		$formRequestLogoRight=CUploadedFile::getInstanceByName('FormRequest[logoRight]');
 		$formOrderofpaymentLogoLeft=CUploadedFile::getInstanceByName('FormOrderofpayment[logoLeft]');
 		$formOrderofpaymentLogoRight=CUploadedFile::getInstanceByName('FormOrderofpayment[logoRight]');
-		
+
 		/*$settingsarr['FormRequest']+=array(
 								'logoLeft'=>Yii::app()->params['FormRequest']['logoLeft'],
 								'logoRight'=>Yii::app()->params['FormRequest']['logoRight']);*/
@@ -352,7 +409,7 @@ class ConfigController extends Controller
 		
 	}
 	//function used to save settings in an ini file
-	function write_ini_file($assoc_arr, $path, $has_sections=FALSE) {
+	public function write_ini_file($assoc_arr, $path, $has_sections=FALSE) {
 		$content = "";
 		if ($has_sections) {
 			foreach ($assoc_arr as $key=>$elem) {

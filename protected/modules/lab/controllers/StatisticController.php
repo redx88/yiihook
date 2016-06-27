@@ -20,8 +20,8 @@ class StatisticController extends Controller
 			$year = date('Y');		
 		}
 		
-		$customers = $this->getCustomers($scope, $year, $month);
-		
+		$customers = $this->getCustomers($year);
+
 		$this->render('customer',array(
 			'model'=>$model, 
 			'customers'=>$customers,
@@ -29,8 +29,9 @@ class StatisticController extends Controller
 		));
 	}
 	
-	function getCustomers($scope, $year, $month)
+	function getCustomers($year)
 	{
+		set_time_limit(3600);
 		$minDate = date("Y-m-d", mktime(0, 0, 0, 1, 1, $year));
 		$maxDate = date("Y-m-d", mktime(0, 0, 0, 12, 31, $year));
 		
@@ -60,7 +61,7 @@ class StatisticController extends Controller
 	}
 	
 	function actionExportCustomer($year){
-	    $customers = $this->getCustomers($scope, $year, $month);
+	    $customers = $this->getCustomers($year);
 		
 	    $this->toExcel($customers,
 	        array(
@@ -69,7 +70,7 @@ class StatisticController extends Controller
 	            	'name'=>'customer.customerName',
 	            	'header'=>'CUSTOMER / COMPANY / FIRM',
 	            ),
-	        	'customer.address',
+	        	'customer.completeAddress',
 	        	'customer.tel',
 	        	'request_count',
 	        	'chemSamples',

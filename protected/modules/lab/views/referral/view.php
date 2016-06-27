@@ -70,4 +70,36 @@ $this->menu=array(
 		'conforme',
 		
 	),
-));*/echo $response; ?>
+));*/
+
+//echo $response; ?>
+
+
+<?php 
+	$ch = curl_init();
+	$url = 'http://localhost/API/index.php';
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_HEADER, 0);
+	
+	//Add data
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, "firstname=BayMax&lastname=Cabral");
+	
+	$data = curl_exec($ch);
+	curl_close($ch);
+	
+	$json = json_decode($data, true);
+	
+	for($i=0; $i<1; $i++){
+		if($json['Result'][$i]['Status'] === 200){
+			echo 'First Name: '.$json['Result'][$i]['Firstname'].'<br/>';
+			echo 'Last Name: '.$json['Result'][$i]['Lastname'];
+		}else{
+			echo 'No Data Found';
+		}
+	}
+	//echo '<pre>';
+	//print_r($json);
+	//echo '</pre>';
+?>

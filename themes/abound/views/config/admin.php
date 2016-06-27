@@ -61,6 +61,7 @@ $linkUpdate = Chtml::link('Update', '', array(
 
     $this->widget('zii.widgets.jui.CJuiAccordion', array(
 		'panels'=>array(
+    		'API Settings <font style="font-weight:normal;font-size:80%;">(Click save button to apply changes)</font>'=>$this->renderPartial('_apiSettings',NULL,true),
 			'Site Settings <font style="font-weight:normal;font-size:80%;">(Click save button to apply changes)</font>'=>$this->renderPartial('_siteSettings',NULL,true),
 			'Form Settings <font style="font-weight:normal;font-size:80%;">(Click save button to apply changes)</font>'=>$this->renderPartial('_formSettings',NULL,true),			
 			'Test Data (Database)'=>$this->renderPartial('_testdata',array(

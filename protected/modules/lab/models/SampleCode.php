@@ -113,12 +113,12 @@ class Samplecode extends CActiveRecord
 		return parent::model($className);
 	}
 	
-	function generateSampleCode($modelLab){
+	function generateSampleCode($modelLab, $year){
 		$sampleCode = Samplecode::model()->find(array(
 	   			'select'=>'*',
 				'order'=>'number DESC, id DESC',
 	    		'condition'=>'rstl_id = :rstl_id AND labId = :labId AND year = :year AND cancelled = 0',
-	    		'params'=>array(':rstl_id' => Yii::app()->Controller->getRstlId(), ':labId' => $modelLab->id, ':year' => date('Y') )
+	    		'params'=>array(':rstl_id' => Yii::app()->Controller->getRstlId(), ':labId' => $modelLab->id, ':year' => $year )
 			));
 			
 		if(isset($sampleCode)){

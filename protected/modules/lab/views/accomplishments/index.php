@@ -115,7 +115,7 @@ Yii::app()->clientScript->registerScript('accomps', "
 	        array(
 				'name'=>'sampleSetup',
 	        	'headerHtmlOptions' => array('colspan' => 2),
-	        	'header'=>'GRATIS<th rowspan="2">25%</th></tr>',
+	        	'header'=>'GRATIS<th rowspan="2">DISCOUNT</th></tr>',
 				'value'=>$data->sampleSetup,
 				'type'=>'raw',
     			'htmlOptions' => array('style' => 'width: 25px; text-align: center;'),

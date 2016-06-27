@@ -95,7 +95,7 @@
 			    ),
 			   
 			));
-		?>	
+		?>
 		<?php
 			$imageCustomer = CHtml::image(Yii::app()->request->baseUrl . '/images/customer_add.png');
 			$linkCustomer = Chtml::link($imageCustomer, '', array( 
@@ -103,7 +103,7 @@
 				'onClick'=>'js:{addCustomer(); $("#dialogCustomer").dialog("open");}',
 			)); 
 			echo '&nbsp;'.$linkCustomer;
-?>
+		?>
 		<?php echo $form->hiddenField($model,'customerId'); ?>
 		<?php echo $form->error($model,'customerName'); ?>
 	</div>

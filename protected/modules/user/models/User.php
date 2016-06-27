@@ -184,6 +184,7 @@ class User extends CActiveRecord
 				'1' => UserModule::t('Lab'),
 				'2' => UserModule::t('Cashier'),
 				'4' => UserModule::t('Accounting'),
+				'5' => UserModule::t('Referral'),
 			),
 		);
 		if (isset($code))
