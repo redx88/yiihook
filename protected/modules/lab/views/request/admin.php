@@ -51,6 +51,10 @@ or <b>=</b>) at the beginning of each of your search values to specify how the c
         <span class="badge badge-danger">Cancelled</span> 
     </div>
 </fieldset>
+
+<?php echo 'Hook test!'; ?>
+
+
 <?php $this->widget('zii.widgets.grid.CGridView', array(
 	'id'=>'request-grid',
 	'itemsCssClass'=>'table table-hover table-striped table-bordered table-condensed',
