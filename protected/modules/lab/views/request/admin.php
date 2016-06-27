@@ -56,6 +56,7 @@ or <b>=</b>) at the beginning of each of your search values to specify how the c
 <?php echo 'Hook test 002!'; ?><br/>
 <?php echo 'Hook test 003!'; ?><br/>
 <?php echo 'Hook test 004!'; ?><br/>
+<?php echo 'Hook test 005!'; ?><br/>
 
 
 <?php $this->widget('zii.widgets.grid.CGridView', array(
